@@ -1,0 +1,67 @@
+const fs = require('fs');
+const process = require('process');
+
+const readline = require('readline');
+const { stdin: input, stdout: output } = require('process');
+const rl = readline.createInterface({ input, output });
+
+const DIR = './02-write-file/';
+const FILENAME = 'text.txt';
+
+new Promise((res) => {
+    const newFilename = (count = 0) => {
+        let fname = FILENAME;
+        if (count) {
+            let a = fname.split('.');
+            if (a.length > 1) {
+                let ext = a.pop();
+                fname = a.join('.') + '_' + count + '.' + ext;
+            } else { FILENAME + '_' + count }
+        }
+        fs.stat(DIR + fname, (err, stat) => {
+            if (err == null) {
+                newFilename(count + 1);
+            } else if (err.code === 'ENOENT') {
+                res(DIR + fname);
+            } else {
+                console.log('Error: ', err.code);
+            }
+        });
+    };
+    newFilename();
+}).then(
+    (fname) => {
+        return new Promise(res => {
+            const stream = fs.createWriteStream(fname, 'utf8');
+            stream.on('error', (err) => console.log(`Err: ${err}`));
+            stream.on('finish', () => console.log('Done'));
+            stream.once('open', function (fd) {
+                console.log("\nHello\n");
+                console.log('A new text file [' + fname + '] was created to record your input to the console');
+                console.log("To complete, enter the word 'exit' or ctrl-C");
+                res(stream);
+            });
+        })
+    }
+).then(
+    streamWrite => {
+        // console.log("file", fname);
+        let first_line = true;
+        return new Promise(res => {
+            const fn_input = () => {
+                rl.question((first_line) ? "insert something here\n>" : '>', (answer) => {
+                    first_line = false;
+                    if (answer == 'exit') {
+                        rl.close();
+                        streamWrite.end();
+                        res();
+                    } else {
+                        streamWrite.write(answer + "\n");
+                        fn_input();
+                    };
+                });
+            }
+            fn_input();
+        });
+    }
+).catch((e) => console.log('error:', e));
