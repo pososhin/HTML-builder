@@ -1,5 +1,4 @@
 const fs = require('fs');
-const process = require('process');
 
 const readline = require('readline');
 const { stdin: input, stdout: output } = require('process');
@@ -34,7 +33,7 @@ new Promise((res) => {
         return new Promise(res => {
             const stream = fs.createWriteStream(fname, 'utf8');
             stream.on('error', (err) => console.log(`Err: ${err}`));
-            stream.on('finish', () => console.log('Done'));
+            // stream.on('finish', () => console.log('Done'));
             stream.once('open', function (fd) {
                 console.log("\nHello\n");
                 console.log('A new text file [' + fname + '] was created to record your input to the console');
@@ -48,20 +47,38 @@ new Promise((res) => {
         // console.log("file", fname);
         let first_line = true;
         return new Promise(res => {
+            const fn_exit = (ctrl) => {
+                let ctrlC = ctrl || false;
+                rl.close();
+                streamWrite.end();
+                res(ctrlC);
+            }
             const fn_input = () => {
                 rl.question((first_line) ? "insert something here\n>" : '>', (answer) => {
                     first_line = false;
                     if (answer == 'exit') {
-                        rl.close();
-                        streamWrite.end();
-                        res();
+                        fn_exit();
                     } else {
                         streamWrite.write(answer + "\n");
                         fn_input();
                     };
                 });
+                process.stdin.on('keypress', (c, k) => {
+                    if (k.sequence == '\u0003') {
+
+                        fn_exit(true);
+                    }
+                });
+                // rl.on('SIGINT', (e) => {
+                // });
             }
             fn_input();
         });
     }
-).catch((e) => console.log('error:', e));
+)
+    .catch((e) => console.log('error:', e))
+    .then((c) => { 
+        if (c) console.log("\nCTRL-C exit without saving the last line");
+        console.log('Goodbye')
+    })
+
