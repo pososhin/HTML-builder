@@ -4,6 +4,4 @@ stream.on('readable', function(){
     var data = stream.read();
     if(data!==null) console.log(data);
 });
-stream.on('end', function(){
-    stream.destroy();
-});
+stream.on('end', function(){ stream.destroy(); });

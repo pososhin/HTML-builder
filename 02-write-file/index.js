@@ -44,7 +44,6 @@ new Promise((res) => {
     }
 ).then(
     streamWrite => {
-        // console.log("file", fname);
         let first_line = true;
         return new Promise(res => {
             const fn_exit = (ctrl) => {
@@ -65,19 +64,16 @@ new Promise((res) => {
                 });
                 process.stdin.on('keypress', (c, k) => {
                     if (k.sequence == '\u0003') {
-
                         fn_exit(true);
                     }
                 });
-                // rl.on('SIGINT', (e) => {
-                // });
             }
             fn_input();
         });
     }
 )
     .catch((e) => console.log('error:', e))
-    .then((c) => { 
+    .then((c) => {
         if (c) console.log("\nCTRL-C exit without saving the last line");
         console.log('Goodbye')
     })
