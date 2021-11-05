@@ -1,4 +1,4 @@
-var fs = require('fs');
+const  fs = require('fs');
 
 module.exports.cp = function (DIR_SOURCE, DIR_TARGET) {
     new Promise((res, rej) => {

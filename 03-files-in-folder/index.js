@@ -1,5 +1,5 @@
-var fs = require('fs');
-var path = require('path');
+const  fs = require('fs');
+const  path = require('path');
 const  check_version = require('../01-read-file/checkversion');
 
 check_version.valid();
