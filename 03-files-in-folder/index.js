@@ -1,12 +1,8 @@
 var fs = require('fs');
 var path = require('path');
+const  check_version = require('../01-read-file/checkversion');
 
-let version =  process.version.match(/v(\d+)\.(\d+)\.(\d+)/);
-if(version[1]<16 || version[2]<13){
-    console.log("Вы запускаете скрип под Node "+process.version);
-    console.log("Проверка проводится на Node 16.13.0 LTS");
-    process.exit();
-}
+check_version.valid();
 
 const DIR = './03-files-in-folder/secret-folder'
 
@@ -22,7 +18,7 @@ function showFiles(dir) {
                         let fname = path.basename(file,ext);
                         console.log(`${fname}-${ext.substr(1)}-${status.size}`);
                     } else{
-                        showFiles(dir + '/' + file);
+                        // showFiles(dir + '/' + file);
                     }
             });
         }

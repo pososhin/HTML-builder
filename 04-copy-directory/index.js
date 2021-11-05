@@ -1,15 +1,11 @@
 var fs = require('fs');
+const  check_version = require('../01-read-file/checkversion');
 
 const DIR = './04-copy-directory/'
 const DIR_SOURCE = 'files'
 const DIR_TARGET = 'files-copy'
 
-let version =  process.version.match(/v(\d+)\.(\d+)\.(\d+)/);
-if(version[1]<16 || version[2]<13){
-    console.log("Вы запускаете скрип под Node "+process.version);
-    console.log("Проверка проводится на Node 16.13.0 LTS");
-    process.exit();
-}
+check_version.valid();
 
 new Promise((res, rej) => {
     fs.rm(DIR + DIR_TARGET, { recursive: true }, (e, r) => {
@@ -42,6 +38,5 @@ new Promise((res, rej) => {
         copyFiles(DIR, DIR_SOURCE, DIR_TARGET);
         res();
     })
-})
-    .catch((e) => console.log(e));
+}).catch((e) => console.log(e));
 
