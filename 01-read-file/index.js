@@ -1,7 +1,4 @@
 const  fs = require('fs');
-const  check_version = require('./checkversion');
-
-check_version.valid();
 
 let stream = new fs.ReadStream("./01-read-file/text.txt",{encoding:"utf-8"});
 stream.on('readable', function(){

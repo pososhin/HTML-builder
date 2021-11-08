@@ -1,10 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const check_version = require('../01-read-file/checkversion');
-const bundlecss = require('../05-merge-styles/bundlecss').bundle;
-const copy_folder = require('../04-copy-directory/cpfolder').cp;
 
-check_version.valid();
+check_version();
 
 const DIR = './06-build-page/';
 const DIR_DIST = DIR + 'project-dist/';
@@ -16,7 +13,6 @@ const FILE_TEMPLATE = DIR + 'template.html';
 const FILE_HTML = DIR_DIST + 'index.html';
 const FILE_CSS = DIR_DIST + 'style.css';
 
-
 const regexTemplate = /\{\{(.*)\}\}/g;
 new Promise((res, rej) => { res();
 }).then(() => {
@@ -24,7 +20,7 @@ new Promise((res, rej) => { res();
         fs.rm(DIR_DIST, { recursive: true }, (e, r) => {
             fs.mkdir(DIR_DIST, () => {
                 copy_folder(DIR_ASSETS_SOURCE,DIR_ASSETS_TARGET);
-                bundlecss(DIR_CSS,FILE_CSS);
+                bundlecss(DIR_CSS,FILE_CSS);                
                 res();
             });
         });
@@ -96,3 +92,94 @@ new Promise((res, rej) => { res();
         });
     });
 }).catch((e)=>console.log(e));
+
+function copy_folder(dir_source, dir_target) {
+    new Promise((res, rej) => {
+        fs.rm(dir_target, { recursive: true }, (e, r) => {
+            // if (e) rej(e);
+            fs.mkdir(dir_target, () => {
+                res();
+            });
+        });
+    }).then((a) => {
+        return new Promise((res, rej) => {
+            function copyFiles(source, target) {
+                fs.readdir(source, (err, files) => {
+                    if (err) rej(err);
+                    for (let file of files) {
+                        fs.stat(source + '/' + file, (errStat, status) => {
+                            if (errStat) rej(errStat);
+                            if (status.isFile()) {
+                                fs.createReadStream(source + '/' + file)
+                                    .pipe(fs.createWriteStream(target + '/' + file));
+                            } else {
+                                fs.mkdir(target + '/' + file, { recursive: true }, (e) => {
+                                    if (e) rej(e);
+                                    copyFiles(source + '/' + file, target + '/' + file);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            copyFiles(dir_source, dir_target);
+            res();
+        })
+    }).catch((e) => console.log(e));
+}
+
+function bundlecss(dir_styles, file_bundle) {
+    new Promise((res, rej) => {       
+        let allFilesPr = [];
+        fs.readdir(dir_styles, (err, files) => {
+            if (err) rej(err);
+            for (let file of files) {
+                if (path.extname(file).toLowerCase() == '.css') {
+                    allFilesPr.push(new Promise((res_file, rej_file) => {
+                        fs.stat(dir_styles + '/' + file, (errStat, status) => {
+                            if (errStat) {
+                                rej_file(errStat);
+                            } else {
+                                if (status.isFile()) {
+                                    let stream = new fs.ReadStream(dir_styles + '/' + file, { encoding: "utf-8" });
+                                    stream.on('readable', () => res_file(stream.read()));
+                                    stream.on('end', () => stream.destroy());
+                                } else {
+                                    res_file('');
+                                }
+                            }
+                        });
+
+                    }));
+                }
+            }
+            res(Promise.all(allFilesPr));
+        });
+    }).then((data) => {
+        return new Promise((res, rej) => {
+            const stream = fs.createWriteStream(file_bundle, 'utf8');
+            stream.on('error', (err) => rej(err));
+            stream.once('open', function (fd) {
+                stream.write(data.join("\n"));
+                stream.end();
+                stream.destroy();
+                res();
+            });
+        })
+    })
+    .catch((e) => console.log("Error:", e));
+}
+
+function check_version(q) {
+    let version = process.version.match(/v(\d+)\.(\d+)\.(\d+)/);
+    if (version[1] < 16 || version[2] < 13) {
+        if (!q) {
+            console.log("----------------------------------------------");
+            console.log("Вы запускаете скрипт под Node " + process.version);
+            console.log("Проверка должна проводится на Node 16.13.0 LTS");
+            console.log("----------------------------------------------");
+        }
+        return false;
+    }
+    return true;
+}

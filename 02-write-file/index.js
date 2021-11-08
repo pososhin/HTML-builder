@@ -1,7 +1,6 @@
 const fs = require('fs');
-const  check_version = require('../01-read-file/checkversion');
 
-check_version.valid();
+check_version();
 
 const readline = require('readline');
 const { stdin: input, stdout: output } = require('process');
@@ -56,7 +55,7 @@ new Promise((res) => {
                 res(ctrlC);
             }
             const fn_input = () => {
-                rl.question((first_line) ? "insert something here\n>" : '>', (answer) => {
+                rl.question((first_line) ? "insert something here\n" : '', (answer) => {
                     first_line = false;
                     if (answer == 'exit') {
                         fn_exit();
@@ -81,3 +80,16 @@ new Promise((res) => {
         console.log('Goodbye')
     })
 
+function check_version(q) {
+    let version = process.version.match(/v(\d+)\.(\d+)\.(\d+)/);
+    if (version[1] < 16 || version[2] < 13) {
+        if (!q) {
+            console.log("----------------------------------------------");
+            console.log("Вы запускаете скрипт под Node " + process.version);
+            console.log("Проверка должна проводится на Node 16.13.0 LTS");
+            console.log("----------------------------------------------");
+        }
+        return false;
+    }
+    return true;
+}

@@ -1,8 +1,7 @@
 const  fs = require('fs');
 const  path = require('path');
-const  check_version = require('../01-read-file/checkversion');
 
-check_version.valid();
+check_version();
 
 const DIR = './03-files-in-folder/secret-folder'
 
@@ -25,3 +24,17 @@ function showFiles(dir) {
     });
 }
 showFiles(DIR)
+
+function check_version(q) {
+    let version = process.version.match(/v(\d+)\.(\d+)\.(\d+)/);
+    if (version[1] < 16 || version[2] < 13) {
+        if (!q) {
+            console.log("----------------------------------------------");
+            console.log("Вы запускаете скрипт под Node " + process.version);
+            console.log("Проверка должна проводится на Node 16.13.0 LTS");
+            console.log("----------------------------------------------");
+        }
+        return false;
+    }
+    return true;
+}
